@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div style="color: #fff; font-size: 4em">
+        <div>Welcome</div>
+        {% if user_uuid %}
+            <div>You are Logged in</div>
+        {% else %}
+            <div>You are Unlogged</div>
+        {% endif %}
+    </div>
+{% endblock %}

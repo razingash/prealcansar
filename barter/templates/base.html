@@ -1,0 +1,13 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-mode="ligth">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    {% block additional_css %}{% endblock %}
+    {% block additional_js %}{% endblock %}
+</head>
+<body style="background: #252525;">
+    {% spaceless %}{% block content %}{% endblock content %}{% endspaceless %}
+</body>
+</html>
