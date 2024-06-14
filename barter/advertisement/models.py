@@ -12,6 +12,8 @@ from custom_user.models import CustomUser
 import os
 import re
 
+from utils.storage import NoDuplicatesStorage
+
 
 class CampaingStatuses(models.IntegerChoices):
     INACTIVE = 0, 'inactive' # base status
@@ -99,7 +101,7 @@ class Advertisement(models.Model):
     content = models.TextField(max_length=500, validators=[MinLengthValidator(10)], blank=False, null=False)
     ad_type = models.PositiveSmallIntegerField(choices=AdvertisementTypes.choices, blank=False, null=False)
     file = models.FileField(upload_to=advertisement_upload_to, validators=[validate_file_size, validate_file_extension],
-                            blank=True, null=True)
+                            storage=NoDuplicatesStorage(), blank=True, null=True)
     title_slug = models.SlugField(blank=False, null=True, unique=True)
 
     def get_absolute_url(self):

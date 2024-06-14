@@ -1,18 +1,14 @@
 
-from django.contrib.auth import logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import DetailView, FormView, UpdateView
 
-from announcement.forms import CreateAnnouncementForm, UpdateAnnouncementForm
-from announcement.models import Announcement
+from announcement.forms import CreateAnnouncementForm, UpdateAnnouncementForm, AnnouncementImagesForm
+from announcement.models import Announcement, AnnouncementMedia, AnnouncementImage
 from services.announcement.services import get_permission_for_updating_announcement
 from utils.utils import DataMixin
-from django.utils.text import slugify
-
-# Create your views here.
 
 
 class AnnouncementPageView(DetailView, DataMixin):
@@ -29,11 +25,15 @@ class AnnouncementPageView(DetailView, DataMixin):
 
 
 class CreateAnnouncementPageView(LoginRequiredMixin, FormView, DataMixin):
-    form_class = CreateAnnouncementForm
     template_name = 'announcement/create_announcement.html'
+    form_class = CreateAnnouncementForm
+    form_class_media = AnnouncementImagesForm
 
     def dispatch(self, request, *args, **kwargs):
         if self.request.user.is_authenticated:
+            if self.request.method == 'GET':
+                form_class_media = self.form_class_media(prefix='announcement_images_form')
+                return self.render_to_response(self.get_context_data(form_class_media=form_class_media))
             return super().dispatch(request, *args, **kwargs)
         return redirect(reverse_lazy('main_page'))
 
@@ -46,11 +46,30 @@ class CreateAnnouncementPageView(LoginRequiredMixin, FormView, DataMixin):
         return context | mix
 
     def form_valid(self, form):
-        form.instance.announcer = self.request.user
-        form.instance.title_slug = slugify(form.instance.title)
-        form = form.save()
-        success_url = form.get_absolute_url()
-        return HttpResponseRedirect(success_url)
+        print(0)
+        form_media = self.form_class_media(self.request.POST, self.request.FILES, prefix='announcement_images_form')
+        print(1)
+        if form_media.is_valid() and form.is_valid():
+            print(2)
+            form.instance.announcer = self.request.user
+            announcement = form.save()
+
+            form_media.instance = announcement
+            print(form_media.__dict__)
+            media_files = form_media.cleaned_data['media']
+            for media_file in media_files:
+                announcement_media = AnnouncementMedia(media=media_file)
+                announcement_media.save()
+                announcement_image = AnnouncementImage(media=announcement_media, announcement=announcement)
+                announcement_image.save()
+
+                #announcement_media = AnnouncementMedia.objects.create(media=media_file)
+                #announcement_image = AnnouncementImage.objects.create(media=announcement_media, announcement=announcement)
+
+            success_url = announcement.get_absolute_url()
+            return HttpResponseRedirect(success_url)
+        else:
+            return self.render_to_response(self.get_context_data(form_class=form, form_class_media=form_media))
 
 
 class UpdateAnnouncementPageView(LoginRequiredMixin, UpdateView, DataMixin):
@@ -61,7 +80,6 @@ class UpdateAnnouncementPageView(LoginRequiredMixin, UpdateView, DataMixin):
         title_slug = self.kwargs.get('title_slug')
         if self.request.user.is_authenticated:
             permission = get_permission_for_updating_announcement(user=self.request.user, title_slug=title_slug)
-            print(permission)
             if permission is True:
                 return super().dispatch(request, *args, **kwargs)
         return redirect(reverse_lazy('announcement', kwargs={'title_slug': title_slug}))
@@ -74,7 +92,7 @@ class UpdateAnnouncementPageView(LoginRequiredMixin, UpdateView, DataMixin):
             mix = self.get_user_context(title='Update announcement')
         return context | mix
 
-    def get_object(self):
+    def get_object(self, queryset=None):
         title_slug = self.kwargs.get('title_slug')
         return get_object_or_404(Announcement, title_slug=title_slug)
 
