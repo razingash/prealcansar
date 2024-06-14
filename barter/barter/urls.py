@@ -25,7 +25,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('sitename/', MainPageView.as_view(), name='main_page'),
     path('sitename/', include('custom_user.urls')),
-    #path('sitename/', include('advertisement.urls')),
+    path('sitename/', include('advertisement.urls')),
     path('sitename/', include('announcement.urls'))
 ]
 

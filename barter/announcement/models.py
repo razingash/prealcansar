@@ -4,6 +4,7 @@ from django.core.validators import MinValueValidator, MinLengthValidator
 from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
+from unidecode import unidecode
 
 from custom_user.models import CustomUser
 import re
@@ -53,7 +54,7 @@ class Announcement(models.Model):
 
     def clean(self):
         if self._state.adding:
-            self.title_slug = slugify(self.title)
+            self.title_slug = slugify(unidecode(self.title))
             super().clean()
 
     def save(self, *args, **kwargs):

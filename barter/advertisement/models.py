@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.utils import timezone
 from decimal import Decimal
 from django.utils.text import slugify
+from unidecode import unidecode
 
 from custom_user.models import CustomUser
 
@@ -51,7 +52,7 @@ def validate_file_size(value):
 
 class Campaing(models.Model):
     advertiser = models.ForeignKey(CustomUser, on_delete=models.PROTECT)
-    name = models.CharField(max_length=50, validators=[MinLengthValidator(10)], blank=False, null=False, unique=True)
+    name = models.CharField(max_length=50, validators=[MinLengthValidator(5)], blank=False, null=False, unique=True)
     start_date = models.DateTimeField(blank=True, null=True)
     end_date = models.DateTimeField(blank=True, null=True)
     budget = models.DecimalField(max_digits=6, decimal_places=2, validators=[MinValueValidator(10)], default=0,
@@ -65,7 +66,7 @@ class Campaing(models.Model):
 
     def clean(self):
         if self._state.adding:
-            self.campaing_slug = slugify(self.name)
+            self.campaing_slug = slugify(unidecode(self.name))
             super().clean()
         if self.pk is not None:
             current_campaing = Campaing.objects.only('id', 'status', 'start_date').get(pk=self.pk)
@@ -99,12 +100,23 @@ class Advertisement(models.Model):
     ad_type = models.PositiveSmallIntegerField(choices=AdvertisementTypes.choices, blank=False, null=False)
     file = models.FileField(upload_to=advertisement_upload_to, validators=[validate_file_size, validate_file_extension],
                             blank=True, null=True)
+    title_slug = models.SlugField(blank=False, null=True, unique=True)
+
+    def get_absolute_url(self):
+        return reverse('advertisement', kwargs={'title_slug': self.title_slug})
 
     def clean(self):
+        if self._state.adding:
+            self.title_slug = slugify(unidecode(self.title))
         if self.file and self.ad_type:
             ad_type_label = dict(AdvertisementTypes.choices)[self.ad_type]
             print(ad_type_label)
             validate_file_extension(value=ad_type_label)
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.title
