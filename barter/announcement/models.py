@@ -19,11 +19,10 @@ class AnnouncementStatuses(models.IntegerChoices): #...
     ENDED = 2, 'ended' # status is set after funds expire
 
 
-def announcement_content_upload_to(instance, filename):
-    print(instance.__dict__, filename)
+def announcement_content_upload_to(instance, filename, announcement_id, image_number):
     ext = os.path.splitext(filename)[1].lower()
-    filename = f'content{ext}'
-    path = f'announcement/{instance.pk}/content/{filename}'
+    filename = f'content_{image_number}{ext}'
+    path = f'announcement/{announcement_id}/content/{filename}'
     return path
 
 def announcement_preview_upload_to(instance, filename):
@@ -90,6 +89,11 @@ class Announcement(models.Model):
 
     def save(self, *args, **kwargs):
         self.clean()
+        if self.pk is None:
+            saved_file = self.preview
+            self.preview = None
+            super().save(*args, **kwargs)
+            self.preview = saved_file
         super().save(*args, **kwargs)
 
     class Meta:
@@ -97,8 +101,8 @@ class Announcement(models.Model):
 
 
 class AnnouncementMedia(models.Model):
-    media = models.ImageField(upload_to=announcement_content_upload_to, validators=[validate_files_size, validate_images_extenson], storage=NoDuplicatesStorage(), blank=True, null=True)
-    
+    media = models.ImageField(validators=[validate_files_size, validate_images_extenson], storage=NoDuplicatesStorage(), blank=True, null=True)
+
     class Meta:
         db_table = 'ann_announcement_media'
 

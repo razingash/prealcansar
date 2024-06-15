@@ -114,10 +114,12 @@ class CreateAdvertisementPageView(LoginRequiredMixin, FormView, DataMixin):
         return kwargs
 
     def form_valid(self, form):
-        form.instance.announcer = self.request.user
-        form = form.save()
-        success_url = form.get_absolute_url()
-        return HttpResponseRedirect(success_url)
+        if form.is_valid():
+            form = form.save()
+            success_url = form.get_absolute_url()
+            return HttpResponseRedirect(success_url)
+        else:
+            return self.render_to_response(self.get_context_data(form=form))
 
 
 class UpdateAdvertisementPageView(LoginRequiredMixin, UpdateView, DataMixin):
@@ -128,7 +130,6 @@ class UpdateAdvertisementPageView(LoginRequiredMixin, UpdateView, DataMixin):
         title_slug = self.kwargs.get('title_slug')
         if self.request.user.is_authenticated:
             permission = get_permission_for_updating_advertisement(user=self.request.user, title_slug=title_slug)
-            print(permission)
             if permission is True:
                 return super().dispatch(request, *args, **kwargs)
         return redirect(reverse_lazy('advertisement', kwargs={'title_slug': title_slug}))
@@ -151,5 +152,9 @@ class UpdateAdvertisementPageView(LoginRequiredMixin, UpdateView, DataMixin):
         return kwargs
 
     def form_valid(self, form):
-        form.save()
-        return super().form_valid(form)
+        if form.is_valid():
+            form = form.save()
+            success_url = form.get_absolute_url()
+            return HttpResponseRedirect(success_url)
+        else:
+            return self.render_to_response(self.get_context_data(form=form))

@@ -2,7 +2,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 
-from announcement.models import Announcement, AnnouncementMedia
+from announcement.models import Announcement, AnnouncementMedia, AnnouncementImage
 
 
 class MultipleFileInput(forms.ClearableFileInput):
@@ -29,9 +29,27 @@ class MultipleFileField(forms.FileField):
         return result
 
 
-class AnnouncementImagesForm(forms.ModelForm):
-    media = MultipleFileField(max_files=3)
+class CreateAnnouncementImagesForm(forms.ModelForm):
+    media = MultipleFileField(max_files=3, required=False)
     #media = forms.ImageField(widget=forms.ClearableFileInput(attrs={'allow_multiple_selected': True}))
+
+    class Meta:
+        model = AnnouncementMedia
+        fields = ['media']
+
+
+class UpdateAnnouncementImagesForm(forms.ModelForm):
+    media = MultipleFileField(max_files=3, required=False)
+
+    def __init__(self, *args, **kwargs):
+        instance = kwargs.get('instance', None)
+        if instance:
+            initial_media = AnnouncementImage.objects.filter(announcement=instance)
+            print(initial_media)
+            kwargs.update(initial={
+                'media': initial_media,
+            })
+        super().__init__(*args, **kwargs)
 
     class Meta:
         model = AnnouncementMedia

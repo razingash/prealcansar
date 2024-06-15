@@ -22,32 +22,20 @@ class CampaingStatuses(models.IntegerChoices):
 
 class AdvertisementTypes(models.IntegerChoices):
     BANNER = 0, 'banner'
-    VIDEO = 1, 'video'
-    POPUP = 2, 'pop-up'
+    POPUP = 1, 'pop-up'
 
-
-def validate_file_extension(value):
-    valid_extensions = {
-        'banner': ['.jpg', '.jpeg', '.png', '.gif', '.svg'],
-        'video': ['.mp4', '.webm', '.avi', '.mov'],
-        'pop-up': ['.jpg', '.jpeg', '.png', '.gif', '.svg']
-    }
-    ext = os.path.splitext(value.name)[1]
-    media_type = value.instance.type
-    if media_type == AdvertisementTypes.BANNER and ext.lower() not in valid_extensions['banner']:
-        raise ValidationError('Unsupported file extension for banner.')
-    elif media_type == AdvertisementTypes.VIDEO and ext.lower() not in valid_extensions['video']:
-        raise ValidationError('Unsupported file extension for video.')
-    elif media_type == AdvertisementTypes.POPUP and ext.lower() not in valid_extensions['interactive']:
-        raise ValidationError('Unsupported file extension for pop-up ad.')
+def validate_file_extension(file):
+    valid_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.svg']
+    ext = os.path.splitext(file.name)[1].lower()
+    if ext not in valid_extensions:
+        raise ValidationError(f"Unallowed file extension. Allowed extensions are: {' '.join(valid_extensions)}")
 
 def advertisement_upload_to(instance, filename):
-    print(instance, instance.__dict__)
     filename = 'ad' + re.search(r'\.(.*)', filename)[0]
-    return f'advertisements/{instance.pk}/avatar/{filename}'
+    return f'campaing/{instance.campaing.pk}/advertisements/{instance.pk}/{filename}'
 
 def validate_file_size(value):
-    max_size = 2 * 512 * 512
+    max_size = 2 * 1024 * 1024
     if value.size > max_size:
         raise ValidationError(f'Maximum file size mustn\'t exceed {max_size} bytes.')
 
@@ -110,14 +98,15 @@ class Advertisement(models.Model):
     def clean(self):
         if self._state.adding:
             self.title_slug = slugify(unidecode(self.title))
-        if self.file and self.ad_type:
-            ad_type_label = dict(AdvertisementTypes.choices)[self.ad_type]
-            print(ad_type_label)
-            validate_file_extension(value=ad_type_label)
         super().clean()
 
     def save(self, *args, **kwargs):
         self.clean()
+        if self.pk is None:
+            saved_file = self.file
+            self.file = None
+            super().save(*args, **kwargs)
+            self.file = saved_file
         super().save(*args, **kwargs)
 
     def __str__(self):
