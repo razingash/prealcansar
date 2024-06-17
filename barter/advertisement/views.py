@@ -32,7 +32,7 @@ class CreateCampaingPageView(LoginRequiredMixin, FormView, DataMixin):
     def dispatch(self, request, *args, **kwargs):
         if self.request.user.is_authenticated:
             return super().dispatch(request, *args, **kwargs)
-        return redirect(reverse_lazy('main_page'))
+        return redirect('custom_user:main_page')
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -59,7 +59,7 @@ class UpdateCampaingPageView(LoginRequiredMixin, UpdateView, DataMixin):
             permission = get_permission_for_updating_campaing(user=self.request.user, campaing_slug=campaing_slug)
             if permission is True:
                 return super().dispatch(request, *args, **kwargs)
-        return redirect(reverse_lazy('campaing', kwargs={'campaing_slug': campaing_slug}))
+        return redirect(reverse_lazy('advertisement:campaing', kwargs={'campaing_slug': campaing_slug}))
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -98,7 +98,7 @@ class CreateAdvertisementPageView(LoginRequiredMixin, FormView, DataMixin):
     def dispatch(self, request, *args, **kwargs):
         if self.request.user.is_authenticated:
             return super().dispatch(request, *args, **kwargs)
-        return redirect(reverse_lazy('main_page'))
+        return redirect('custom_user:main_page')
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -132,7 +132,7 @@ class UpdateAdvertisementPageView(LoginRequiredMixin, UpdateView, DataMixin):
             permission = get_permission_for_updating_advertisement(user=self.request.user, title_slug=title_slug)
             if permission is True:
                 return super().dispatch(request, *args, **kwargs)
-        return redirect(reverse_lazy('advertisement', kwargs={'title_slug': title_slug}))
+        return redirect(reverse_lazy('advertisement:advertisement', kwargs={'title_slug': title_slug}))
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)

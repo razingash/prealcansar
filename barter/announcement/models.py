@@ -80,7 +80,7 @@ class Announcement(models.Model):
     title_slug = models.SlugField(blank=False, null=True, unique=True)
 
     def get_absolute_url(self):
-        return reverse('announcement', kwargs={'title_slug': self.title_slug})
+        return reverse('announcement:announcement', kwargs={'title_slug': self.title_slug})
 
     def clean(self):
         if self._state.adding:

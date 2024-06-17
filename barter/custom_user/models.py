@@ -12,7 +12,7 @@ class CustomUser(AbstractUser):
     description = models.TextField(max_length=1000, blank=True, null=True)
 
     def get_absolute_url(self):
-        return reverse('profile', kwargs={'profile_uuid': self.uuid})
+        return reverse('custom_user:profile', kwargs={'profile_uuid': self.uuid})
 
     def __str__(self):
         return self.username

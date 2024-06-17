@@ -31,12 +31,13 @@ class CreateAnnouncementPageView(LoginRequiredMixin, FormView, DataMixin):
     form_class_media = CreateAnnouncementImagesForm
 
     def dispatch(self, request, *args, **kwargs):
-        if self.request.user.is_authenticated:
-            if self.request.method == 'GET':
-                form_class_media = self.form_class_media(prefix='announcement_images_form')
-                return self.render_to_response(self.get_context_data(form_class_media=form_class_media))
-            return super().dispatch(request, *args, **kwargs)
-        return redirect(reverse_lazy('main_page'))
+        if not self.request.user.is_authenticated:
+            return redirect('custom_user:main_page')
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        form_class_media = self.form_class_media(prefix='announcement_images_form')
+        return self.render_to_response(self.get_context_data(form_class_media=form_class_media))
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -82,13 +83,13 @@ class UpdateAnnouncementPageView(LoginRequiredMixin, FormView, DataMixin): #ther
         if self.request.user.is_authenticated:
             permission = get_permission_for_updating_announcement(user=self.request.user, title_slug=title_slug)
             if permission is True:
-                if self.request.method == 'GET':
-                    self.object = self.get_object()
-                    form_class_media = self.form_class_media(prefix='announcement_images_form', instance=self.object)
-                    return self.render_to_response(self.get_context_data(instance=self.object,
-                                                                         form_class_media=form_class_media))
                 return super().dispatch(request, *args, **kwargs)
-        return redirect(reverse_lazy('announcement', kwargs={'title_slug': title_slug}))
+        return redirect(reverse_lazy('announcement:announcement', kwargs={'title_slug': title_slug}))
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        form_class_media = self.form_class_media(prefix='announcement_images_form', instance=self.object)
+        return self.render_to_response(self.get_context_data(instance=self.object, form_class_media=form_class_media))
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -140,5 +141,5 @@ class UpdateAnnouncementPageView(LoginRequiredMixin, FormView, DataMixin): #ther
 
     def get_success_url(self):
         title_slug = self.kwargs.get('title_slug')
-        return reverse_lazy('announcement', kwargs={'title_slug': title_slug})
+        return reverse_lazy('announcement:announcement', kwargs={'title_slug': title_slug})
 

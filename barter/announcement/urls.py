@@ -2,6 +2,8 @@ from django.urls import path
 
 from .views import *
 
+app_name = 'announcement'
+
 urlpatterns = [
     path('announcement/', CreateAnnouncementPageView.as_view(), name='create_announcement'),
     path('announcement/<slug:title_slug>/', AnnouncementPageView.as_view(), name='announcement'),

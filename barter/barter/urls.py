@@ -23,10 +23,9 @@ from custom_user.views import MainPageView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('sitename/', MainPageView.as_view(), name='main_page'),
-    path('sitename/', include('custom_user.urls')),
-    path('sitename/', include('advertisement.urls')),
-    path('sitename/', include('announcement.urls'))
+    path('sitename/', include('custom_user.urls', namespace='custom_user')), # main page in custom_user/urls.py
+    path('sitename/', include('advertisement.urls', namespace='advertisement')),
+    path('sitename/', include('announcement.urls', namespace='announcement'))
 ]
 
 if settings.DEBUG:
